@@ -1,9 +1,10 @@
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
 
 
 public class DFAState extends State{
-	public HashSet<State> states;
+	public Hashtable<String,State> states;
 	public boolean marked;
 	public boolean checkedStates;
 	public boolean isFinal;
@@ -17,8 +18,11 @@ public class DFAState extends State{
 	
 	public ArrayList<Action> actions()
 	{
-		ArrayList<Action> actions = new ArrayList<Action>(); 
-		for (State s : states){
+		ArrayList<Action> actions = new ArrayList<Action>();
+		
+		Iterator<State> it= states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next(); // Check for duplicates
 			for(Action a : s.actions){
 				actions.add(a);
 			}
@@ -28,7 +32,9 @@ public class DFAState extends State{
 	
 	public String name(){
 		String name = "";
-		for (State s : states){
+		Iterator<State> it= states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next();
 			name += s.id + ",";
 		}
 		return name;
@@ -36,7 +42,9 @@ public class DFAState extends State{
 	
 	public boolean isFinal(){
 		if(checkedStates) return isFinal;
-		for (State s : states){
+		Iterator<State> it= states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next();
 			if (s.type == State.StateType.STARTACCEPTING || s.type == State.StateType.ACCEPTING)
 				isFinal = true;
 				checkedStates = true;

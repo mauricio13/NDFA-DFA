@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Stack;
 
 public class NDFAtoDFATransformer {
@@ -15,18 +16,48 @@ public class NDFAtoDFATransformer {
 		return null;
 	}
 	
-	public static HashSet<State> moveNFA(DFAState state, String input){
+	public static Hashtable<String,State> moveNFA(DFAState state, String input){
 		//HashSet<State> states = state.states;
-		HashSet <State> result = new HashSet<State>();
-		for (State s : state.states){
+		Hashtable <String,State> states = state.states;
+		Hashtable <String,State> result = new Hashtable<String,State>();
+		Iterator <State> it = states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next();
 			for (Action a : s.actions){
-				if (a.symbol.equals(input)) result.add(a.toState);
+				if (a.symbol.equals(input)) result.put(a.toState.id, a.toState);
 			}
 		}
 		return result;
 	}
 	
-	public static HashSet<State> epsilonClosure(HashSet <State> states){
+	public static Hashtable<String, State> epsilonClosure(Hashtable<String, State> states){
+		Stack<State> remainingStates = new Stack<State>();
+		Hashtable <String, State> result = new Hashtable <String, State>();
+		Iterator <State> it = states.values().iterator();
+		while (it.hasNext()){
+			State s = it.next();
+			remainingStates.add(s);
+		}
+
+		
+		while (!remainingStates.isEmpty()){
+			State s = remainingStates.pop();
+			ArrayList<Action> actions = s.actions;
+			for (Action action : actions){
+				if (action.symbol.equals("epsilon")){
+					State actionState = action.toState;
+					if (!result.contains(actionState)){
+						result.put(actionState.id, actionState);
+						remainingStates.push(actionState);
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	public static HashSet<State> _epsilonClosure(HashSet <State> states){
 		Stack<State> remainingStates = new Stack<State>();
 		HashSet<State> result = new HashSet<State>();
 		// Push all states to the stack
@@ -51,40 +82,49 @@ public class NDFAtoDFATransformer {
 		return result;
 	}
 	
-	public static HashSet<State> acceptingStates(HashSet<State> states){
-		HashSet<State> acceptingStates = new HashSet<State>();
-		for (State s : states){
+	public static Hashtable<String,State> acceptingStates(Hashtable<String, State> states){
+		Hashtable<String,State> acceptingStates = new Hashtable<String,State>();
+		Iterator<State> it = states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next();
 			if(s.type == State.StateType.ACCEPTING ||s.type == State.StateType.STARTACCEPTING ){
-				acceptingStates.add(s);
+				acceptingStates.put(s.id, s);
 			}
 		}
+
 		return acceptingStates;
 	}
 	
-	public static HashSet<State> startingStates(HashSet<State> states){
-		HashSet<State> acceptingStates = new HashSet<State>();
-		for (State s : states){
+	public static Hashtable<String,State> startingStates(Hashtable <String,State> states){
+		Hashtable<String,State> startingStates = new Hashtable<String,State>();
+		Iterator<State> it = states.values().iterator();
+		while(it.hasNext()){
+			State s = it.next();
 			if(s.type == State.StateType.START ||s.type == State.StateType.STARTACCEPTING ){
-				acceptingStates.add(s);
+				startingStates.put(s.id, s);
 			}
 		}
-		return acceptingStates;
+		return startingStates;
 	}
 	
-	public static DFAState nextUnmarkedState(HashSet<DFAState> states){
-		for (DFAState s : states) if (!s.marked) return s;
+	public static DFAState nextUnmarkedState(Hashtable<String,DFAState> states){
+		Iterator<DFAState> it = states.values().iterator();
+		while(it.hasNext()){
+			DFAState s = it.next();
+			if (!s.marked) return s;
+		}
 		return null;
 	}
 	
 	// Change this to use dictionaries instead of sets
-	public static String toDFA(String inputFile) throws IOException{
-		HashSet<State> nfaStates = FAReader.parseAutomata(inputFile);
-		HashSet<DFAState> dfaStates = new HashSet<DFAState>();
+	public static Hashtable<String,State> toDFA(String inputFile) throws IOException{
+		Hashtable<String, State> nfaStates = FAReader.parseAutomata(inputFile);
+		Hashtable<String,DFAState> dfaStates = new Hashtable<String,DFAState>();
 		
-		HashSet<State> startingStates = acceptingStates(nfaStates); // Change this to use all the states
+		Hashtable <String, State> startingStates = acceptingStates(nfaStates);
 		DFAState startingState = new DFAState();
 		startingState.states = epsilonClosure(startingStates);
-		dfaStates.add(startingState);
+		dfaStates.put(startingState.name(), startingState);
 		
 		DFAState nextUnmarkedState = nextUnmarkedState(dfaStates);
 		
@@ -92,10 +132,14 @@ public class NDFAtoDFATransformer {
 			nextUnmarkedState.marked = true;
 			ArrayList <Action> actions = nextUnmarkedState.actions();
 			for (Action a : actions){
-				HashSet <State> epsStates = epsilonClosure(moveNFA(nextUnmarkedState, a.symbol));
+				Hashtable <String,State> epsStates = epsilonClosure(moveNFA(nextUnmarkedState, a.symbol));
 				DFAState S = new DFAState();
 				S.states = epsStates;
-				if (!dfaStates.contains(S)) System.out.print("");
+				if (!dfaStates.contains(S)){
+					//Add S to SDFA (as an “unmarked” state)
+					S.marked = false;
+					dfaStates.put(S.name(), S);
+				}
 				Action action = new Action(a.symbol, S);
 				nextUnmarkedState.actions.add(action);
 			}
@@ -103,25 +147,7 @@ public class NDFAtoDFATransformer {
 			nextUnmarkedState = nextUnmarkedState(dfaStates);
 		}
 		
-		
-		/*	
-			switch (type){
-				case ACCEPTING:
-					acceptingStates.add(state);
-					break;
-				case START:
-					startingStates.add(state);
-					break;
-				case STARTACCEPTING:
-					startingStates.add(state);
-					acceptingStates.add(state);
-					break;
-				case NORMAL:
-					break;
-				
-			}
-			*/
-		return "";
+		dfaStates;
 	}
 	
 }
