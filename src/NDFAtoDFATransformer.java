@@ -116,6 +116,11 @@ public class NDFAtoDFATransformer {
 		return null;
 	}
 	
+	public static String dfaToString(Hashtable <String, DFAState> automata){
+		return null;
+		
+	}
+	
 	// Change this to use dictionaries instead of sets
 	public static Hashtable<String,DFAState> toDFA(String inputFile) throws IOException{
 		Hashtable<String, State> nfaStates = FAReader.parseAutomata(inputFile);
