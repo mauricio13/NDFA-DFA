@@ -117,7 +117,7 @@ public class NDFAtoDFATransformer {
 	}
 	
 	// Change this to use dictionaries instead of sets
-	public static Hashtable<String,State> toDFA(String inputFile) throws IOException{
+	public static Hashtable<String,DFAState> toDFA(String inputFile) throws IOException{
 		Hashtable<String, State> nfaStates = FAReader.parseAutomata(inputFile);
 		Hashtable<String,DFAState> dfaStates = new Hashtable<String,DFAState>();
 		
@@ -147,7 +147,7 @@ public class NDFAtoDFATransformer {
 			nextUnmarkedState = nextUnmarkedState(dfaStates);
 		}
 		
-		dfaStates;
+		return dfaStates;
 	}
 	
 }
