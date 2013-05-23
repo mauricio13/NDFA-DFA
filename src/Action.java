@@ -1,10 +1,12 @@
 
 public class Action {
 	public String symbol;
-	public String toState;
+	public State toState;
+
 	
-	public Action(String symbol, String toState){
+	public Action(String symbol, State toState){
 		this.symbol = symbol;
 		this.toState = toState;
+
 	}
 }

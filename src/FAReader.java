@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.HashSet;
 
 
 public class FAReader {
@@ -14,7 +15,8 @@ public class FAReader {
 		return null;
 	}
 
-	public static Hashtable<String, ArrayList<String>> parseAutomata(String file) throws IOException{
+	//state:symbol
+	public static HashSet<State> parseAutomata(String file) throws IOException{
 	    // ASCII[tabulador]ASCII[tabulador]ASCII[tabulador][enter]
 		BufferedReader br = new BufferedReader(new FileReader(file));
 	    try {
@@ -46,7 +48,10 @@ public class FAReader {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		String comps[] = "1,10,2,".split(",");
+		for (String s : comps){
+			System.out.println(s);
+		}
 
 	}
 
